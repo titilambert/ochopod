@@ -56,7 +56,7 @@ if __name__ == '__main__':
             return 'sleep 3600', {}
 
     #
-    # - if you run this script locally and curl http://locahost:8080/info you will see the metrics.
+    # - if you run this script locally and curl -XPOST http://locahost:8080/info you will see the metrics.
     # - simply type CTRL-C to exit
     #
     Pod().boot(Strategy, local=1)
