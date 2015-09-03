@@ -100,7 +100,7 @@ class Watcher(FSM):
             #
             if pods != data.latest:
                 data.latest = pods
-                logger.debug('%s : change detected in dependency' % self.path)
+                logger.debug('%s : change detected in dependency', self.path)
                 self.model.tell(
                     {
                         'request': 'snapshot update',

@@ -132,7 +132,7 @@ class Actor(FSM, Piped):
             # - this happens when we need to first terminate the process
             #
             try:
-                logger.info('%s : tearing down process %s' % (self.path, data.sub.pid))
+                logger.info('%s : tearing down process %s', self.path, data.sub.pid)
                 self.hints['process'] = 'terminating'
                 self.tear_down(data.sub)
 
@@ -170,7 +170,7 @@ class Actor(FSM, Piped):
                     # - if the soft switch is on bypass the SIGKILL completely
                     # - this is a special case to handle peculiar scenarios
                     #
-                    logger.info('%s: bypassing the forced termination (leaking pid %s)...' % (self.path, data.sub.pid))
+                    logger.info('%s: bypassing the forced termination (leaking pid %s)...', self.path, data.sub.pid)
 
                 else:
 
@@ -178,7 +178,7 @@ class Actor(FSM, Piped):
                     # - the process is stuck, force a SIGKILL
                     # - silently trap any failure
                     #
-                    logger.info('%s : pid %s not terminating, killing it' % (self.path, data.sub.pid))
+                    logger.info('%s : pid %s not terminating, killing it', self.path, data.sub.pid)
                     try:
                         data.sub.kill()
 
@@ -186,7 +186,7 @@ class Actor(FSM, Piped):
                         pass
 
             else:
-                logger.debug('%s : pid %s terminated in %d seconds' % (self.path, data.sub.pid, int(elapsed)))
+                logger.debug('%s : pid %s terminated in %d seconds', self.path, data.sub.pid, int(elapsed))
 
         data.sub = None
         self.hints['process'] = 'stopped'
@@ -255,11 +255,11 @@ class Actor(FSM, Piped):
                         #
                         data.checks -= 1
                         data.failed = 0
-                        logger.warning('%s : sanity check (%d/%d) failed -> %s' %
-                                       (self.path, self.checks - data.checks, self.checks, diagnostic(failure)))
+                        logger.warning('%s : sanity check (%d/%d) failed -> %s',
+                                       self.path, self.checks - data.checks, self.checks, diagnostic(failure))
 
                         if not data.checks:
-                            logger.warning('%s : turning pod off' % self.path)
+                            logger.warning('%s : turning pod off', self.path)
                             data.checks = self.checks
                             self._request(['off'])
 
@@ -272,7 +272,7 @@ class Actor(FSM, Piped):
                     # - a successful exit code (0) will automatically force a shutdown
                     # - this is a convenient way for pods go down automatically once their task is done
                     #
-                    logger.error('%s : pid %s exited, shutting down' % (self.path, data.sub.pid))
+                    logger.error('%s : pid %s exited, shutting down', self.path, data.sub.pid)
                     self._request(['kill'])
 
                 else:
@@ -283,7 +283,7 @@ class Actor(FSM, Piped):
                     # - restart it gracefully
                     #
                     data.failed += 1
-                    logger.error('%s : pid %s died (code %d), re-running' % (self.path, data.sub.pid, code))
+                    logger.error('%s : pid %s died (code %d), re-running', self.path, data.sub.pid, code)
                     self._request(['off', 'on'])
 
         else:
@@ -313,7 +313,7 @@ class Actor(FSM, Piped):
             # - this is the code-path used for instance up a leader request when strict is false
             #
             reply = {}, 200
-            logger.debug('%s : skipping /control/on request' % self.path)
+            logger.debug('%s : skipping /control/on request', self.path)
             data.latch.set(reply)
 
         else:
@@ -329,7 +329,7 @@ class Actor(FSM, Piped):
                     # - if this is the 1st time the pod is running invoke the initialize() callback
                     # - this is typically used to run once-only stuff such as attaching storage volumes, etc.
                     #
-                    logger.info('%s : initializing pod' % self.path)
+                    logger.info('%s : initializing pod', self.path)
                     self.initialize()
                     self.initialized = 1
 
@@ -342,7 +342,7 @@ class Actor(FSM, Piped):
                     # - make sure the optional overrides set by configure() are strings
                     #
                     cluster = _Cluster(data.js)
-                    logger.info('%s : configuring pod %d/%d' % (self.path, 1 + cluster.index, cluster.size))
+                    logger.info('%s : configuring pod %d/%d' , self.path, 1 + cluster.index, cluster.size)
                     data.command, overrides = self.configure(cluster)
                     data.env = {key: str(value) for key, value in overrides.items()}
                     self.last = data.js
@@ -390,7 +390,7 @@ class Actor(FSM, Piped):
                                 if line == '' and code is not None:
                                     break
 
-                                logger.info('pid %s : %s' % (process.pid, line))
+                                logger.info('pid %s : %s', process.pid, line)
 
                         out = Thread(target=_pipe, args=(data.sub,))
                         out.daemon = True
@@ -409,10 +409,10 @@ class Actor(FSM, Piped):
 
                     data.pids += 1
                     self.hints['process'] = 'running'
-                    logger.info('%s : popen() #%d -> started <%s> as pid %s' % (self.path, data.pids, data.command, data.sub.pid))
+                    logger.info('%s : popen() #%d -> started <%s> as pid %s', self.path, data.pids, data.command, data.sub.pid)
                     if data.env:
                         unrolled = '\n'.join(['\t%s -> %s' % (k, v) for k, v in data.env.items()])
-                        logger.debug('%s : extra environment for pid %s ->\n%s' % (self.path, data.sub.pid, unrolled))
+                        logger.debug('%s : extra environment for pid %s ->\n%s', self.path, data.sub.pid, unrolled)
 
                 reply = {}, 200
                 data.latch.set(reply)
@@ -424,7 +424,7 @@ class Actor(FSM, Piped):
                 # - the pod will shutdown automatically as well
                 #
                 reply = {}, 406
-                logger.warning('%s : failed to configure -> %s, shutting down' % (self.path, diagnostic(failure)))
+                logger.warning('%s : failed to configure -> %s, shutting down', self.path, diagnostic(failure))
                 self._request(['kill'])
                 data.latch.set(reply)
 
@@ -449,7 +449,7 @@ class Actor(FSM, Piped):
             # - any failure trapped during the configuration -> HTTP 406
             #
             reply = {}, 406
-            logger.warning('%s : failed to run the pre-check -> %s' % (self.path, diagnostic(failure)))
+            logger.warning('%s : failed to run the pre-check -> %s', self.path, diagnostic(failure))
             data.latch.set(reply)
 
         self.commands.popleft()
@@ -482,7 +482,7 @@ class Actor(FSM, Piped):
             #
             # - invoke the optional finalize() callback
             #
-            logger.info('%s : finalizing pod' % self.path)
+            logger.info('%s : finalizing pod', self.path)
             self.finalize()
 
         except Exception as failure:
@@ -491,7 +491,7 @@ class Actor(FSM, Piped):
             # - log something if for some reason finalize() failed as we can't really recover
             # - don't bother responding with a 406
             #
-            logger.warning('%s : failed to finalize -> %s' % (self.path, diagnostic(failure)))
+            logger.warning('%s : failed to finalize -> %s', self.path, diagnostic(failure))
 
         #
         # - in any case request a termination and tag the pod as 'dead'
@@ -506,7 +506,7 @@ class Actor(FSM, Piped):
     def signal(self, data):
 
         try:
-            logger.debug('%s : user signal received' % self.path)
+            logger.debug('%s : user signal received', self.path)
             js = self.signaled(data.js, process=data.sub)
             reply = js if js else {}, 200
 
@@ -516,7 +516,7 @@ class Actor(FSM, Piped):
             # - abort on a 500 upon any failure
             #
             reply = {}, 500
-            logger.warning('%s : failed to signal -> %s' % (self.path, diagnostic(failure)))
+            logger.warning('%s : failed to signal -> %s', self.path, diagnostic(failure))
 
         data.latch.set(reply)
         self.commands.popleft()
@@ -527,7 +527,7 @@ class Actor(FSM, Piped):
         try:
 
             assert data.js, 'control/ok received out of context (leader bug ?)'
-            logger.debug('%s : cluster has been formed, invoking configured()' % self.path)
+            logger.debug('%s : cluster has been formed, invoking configured()', self.path)
             cluster = _Cluster(data.js)
             self.configured(cluster)
             reply = {}, 200
@@ -538,7 +538,7 @@ class Actor(FSM, Piped):
             # - abort on a 500 upon any failure
             #
             reply = {}, 500
-            logger.warning('%s : failed to signal -> %s' % (self.path, diagnostic(failure)))
+            logger.warning('%s : failed to signal -> %s', self.path, diagnostic(failure))
 
         data.latch.set(reply)
         self.commands.popleft()

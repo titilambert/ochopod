@@ -85,7 +85,7 @@ class Pod(EC2Marathon):
             # - extract the mesos PORT_* bindings and construct a small remapping dict
             #
             ports = {}
-            logger.debug('environment ->\n%s' % '\n'.join(['\t%s -> %s' % (k, v) for k, v in env.items()]))
+            logger.debug('environment ->\n%s', '\n'.join(['\t%s -> %s' % (k, v) for k, v in env.items()]))
             for key, val in env.items():
                 if key.startswith('PORT_'):
                     ports[key[5:]] = int(val)
@@ -193,7 +193,7 @@ class Pod(EC2Marathon):
             #   the coordinator (especially the pod index which is derived from zookeeper)
             #
             latch = ThreadingFuture()
-            logger.info('starting %s.%s (marathon/ec2) @ %s' % (hints['namespace'], hints['cluster'], hints['node']))
+            logger.info('starting %s.%s (marathon/ec2) @ %s', hints['namespace'], hints['cluster'], hints['node'])
             breadcrumbs = deepcopy(hints)
             hints['metrics'] = {}
             env.update({'ochopod': json.dumps(hints)})
@@ -266,12 +266,12 @@ class Pod(EC2Marathon):
                 try:
 
                     ts = time.time()
-                    logger.debug('http in -> /control/%s' % task)
+                    logger.debug('http in -> /control/%s', task)
                     latch = ThreadingFuture()
                     executor.tell({'request': task, 'latch': latch, 'data': request.data})
                     js, code = latch.get(timeout=int(timeout))
                     ms = time.time() - ts
-                    logger.debug('http out -> HTTP %s (%d ms)' % (code, ms))
+                    logger.debug('http out -> HTTP %s (%d ms)', code, ms)
                     return json.dumps(js), code
 
                 except Timeout:
@@ -343,4 +343,4 @@ class Pod(EC2Marathon):
 
         except Exception as failure:
 
-            logger.fatal('unexpected condition -> %s' % diagnostic(failure))
+            logger.fatal('unexpected condition -> %s', diagnostic(failure))

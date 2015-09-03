@@ -60,10 +60,10 @@ class _Post(Thread):
             # - any failure to reach the pod or timeout will be silently trapped (but the thread will
             #   join() with an empty code)
             #
-            logger.debug('control -> %s' % self.url)
+            logger.debug('control -> %s', self.url)
             reply = requests.post(self.url, data=json.dumps(self.js), timeout=self.timeout)
             self.code = reply.status_code
-            logger.debug('control <- %s (HTTP %d)' % (self.url, self.code))
+            logger.debug('control <- %s (HTTP %d)', self.url, self.code)
 
         except Timeout:
 
@@ -71,7 +71,7 @@ class _Post(Thread):
             # - just log something
             # - the thread will simply return a None for return code
             #
-            logger.debug('control <- %s (timeout)' % self.url)
+            logger.debug('control <- %s (timeout)', self.url)
 
     def join(self, timeout=None):
 
@@ -141,8 +141,8 @@ class Actor(FSM, Reactive):
         # - start spinning (the watcher updates will be processed in there)
         #
         self.watchers += [Remote.start(self.actor_ref, self.zk, self.scope, tag) for tag in self.depends_on]
-        logger.debug('%s : watching %d dependencies' % (self.path, len(self.depends_on)))
-        logger.info('%s : leading for cluster %s.%s' % (self.path, self.scope, self.tag))
+        logger.debug('%s : watching %d dependencies', self.path, len(self.depends_on))
+        logger.info('%s : leading for cluster %s.%s', self.path, self.scope, self.tag)
         return 'spin', data, 0
 
     def spin(self, data):
@@ -177,8 +177,8 @@ class Actor(FSM, Reactive):
                 # - this will start the countdown to configuration (which can be aborted if we fall back
                 #   on the same hash again, typically after a transient zookeeper connection loss)
                 #
-                logger.info('%s : hash changed, configuration in %2.1f seconds' % (self.path, self.damper))
-                logger.debug('%s : hash -> %s' % (self.path, latest))
+                logger.info('%s : hash changed, configuration in %2.1f seconds', self.path, self.damper)
+                logger.debug('%s : hash -> %s', self.path, latest)
                 data.next = now + self.damper
                 data.dirty = 1
 
@@ -201,7 +201,7 @@ class Actor(FSM, Reactive):
                 data.last = js
                 data.last['key'] = str(self.id)
                 self.zk.set('%s/%s.%s/snapshot' % (ROOT, self.scope, self.tag), json.dumps(pods))
-                logger.debug('%s : pod update with no hash impact (did we just reconnect to zk ?)' % self.path)
+                logger.debug('%s : pod update with no hash impact (did we just reconnect to zk ?)', self.path)
 
         if not data.dirty:
 
@@ -235,11 +235,11 @@ class Actor(FSM, Reactive):
                     # - something blew up in probe(), set the status accordingly
                     #
                     self.hints['status'] = '* probe() failed (check the code)'
-                    logger.warning('%s : probe() failed -> %s' % (self.path, diagnostic(failure)))
+                    logger.warning('%s : probe() failed -> %s', self.path, diagnostic(failure))
 
                 data.next_probe = now + self.probe_every
                 if self.hints['status']:
-                    logger.debug('%s : probe() -> "%s"' % (self.path, self.hints['status']))
+                    logger.debug('%s : probe() -> "%s"', self.path, self.hints['status'])
 
         else:
 
@@ -256,7 +256,7 @@ class Actor(FSM, Reactive):
             # - print some cool countdown
             #
             else:
-                logger.debug('%s : configuration in %2.1f seconds' % (self.path, remaining))
+                logger.debug('%s : configuration in %2.1f seconds', self.path, remaining)
 
         return 'spin', data, SAMPLING
 
@@ -282,7 +282,7 @@ class Actor(FSM, Reactive):
             # - this will allow us to send requests directly without worrying about remapping the control port
             # - pay attention to order the pod list to guarantee consistent sequencing
             #
-            logger.info('%s : configuring (%d pods, i/o port %d)' % (self.path, len(pods), self.port))
+            logger.info('%s : configuring (%d pods, i/o port %d)', self.path, len(pods), self.port)
             ordered = sorted(pods.items())
             local = str(self.port)
             urls = \
@@ -328,7 +328,7 @@ class Actor(FSM, Reactive):
                         thread.start()
                         return thread.join()
 
-                    logger.debug('%s : -> /control/%s (%d pods, sequential)' % (self.path, task, len(pods)))
+                    logger.debug('%s : -> /control/%s (%d pods, sequential)', self.path, task, len(pods))
                     return [_start_join() for thread in threads]
 
                 else:
@@ -340,7 +340,7 @@ class Actor(FSM, Reactive):
                     for thread in threads:
                         thread.start()
 
-                    logger.debug('%s : -> /control/%s (%d pods)' % (self.path, task, len(pods)))
+                    logger.debug('%s : -> /control/%s (%d pods)', self.path, task, len(pods))
                     return [thread.join() for thread in threads]
 
             #
@@ -351,7 +351,7 @@ class Actor(FSM, Reactive):
             replies = _control('check')
             dead = [key for key, code in replies if code == 410]
             if dead:
-                logger.warning('%s : dropping %d dead pods' % (self.path, len(dead)))
+                logger.warning('%s : dropping %d dead pods', self.path, len(dead))
                 for key in dead:
                     del pods[key]
                     del urls[key]
@@ -371,8 +371,8 @@ class Actor(FSM, Reactive):
                 # - note we include an extra 'index' integer to the payload passed to the pod (this index
                 #   can be used to tag the pod in logs or perform specific setup procedures)
                 #
-                logger.debug('%s : json payload ->\n%s' % (self.path, json.dumps(js, indent=4, separators=(',', ': '))))
-                logger.info('%s : asking %d pods to configure' % (self.path, len(pods)))
+                logger.debug('%s : json payload ->\n%s', self.path, json.dumps(js, indent=4, separators=(',', ': ')))
+                logger.info('%s : asking %d pods to configure', self.path, len(pods))
                 replies = _control('on')
                 assert all(code == 200 for _, code in replies), '1+ pods failing to configure or unreachable'
 
@@ -390,8 +390,8 @@ class Actor(FSM, Reactive):
             local = json.dumps(pods)
             self.zk.set('%s/%s.%s/snapshot' % (ROOT, self.scope, self.tag), local)
             self.zk.set('%s/%s.%s/hash' % (ROOT, self.scope, self.tag), latest)
-            logger.debug('%s : new hash -> %s' % (self.path, latest))
-            logger.info('%s : configuration complete (%d pods alive)' % (self.path, len(pods)))
+            logger.debug('%s : new hash -> %s', self.path, latest)
+            logger.info('%s : configuration complete (%d pods alive)', self.path, len(pods))
 
             #
             # - all cool, we can now unset our trigger
@@ -409,7 +409,7 @@ class Actor(FSM, Reactive):
             # - any assert aborts the procedure
             # - leave the trigger on and reset the timestamp to re-attempt
             #
-            logger.warn('%s : configuration failed -> %s' % (self.path, diagnostic(failure)))
+            logger.warn('%s : configuration failed -> %s', self.path, diagnostic(failure))
             self.hints['state'] = 'leader (configuration pending)'
             data.next = time.time() + self.damper
             data.last = None
@@ -437,7 +437,7 @@ class Actor(FSM, Reactive):
             # - one of our watcher actors failed to read from zk
             # - force a termination to re-attempt a connection to zk (and re-register the pod)
             #
-            logger.debug('%s : watcher failure, terminating' % self.path)
+            logger.debug('%s : watcher failure, terminating', self.path)
             self.terminate = 1
 
         else:

@@ -225,7 +225,7 @@ class FSM(ThreadingActor):
         # - pass the exception that caused the reset back to the latch or re-package it as an Aborted
         #   and seed its log using the failure diagnostic otherwise
         #
-        logger.debug('%s : reset (%s)' % (self.path, data.cause))
+        logger.debug('%s : reset (%s)', self.path, data.cause)
         self.exitcode(data.cause if isinstance(data.cause, Aborted) else Aborted(data.diagnostic))
 
     def initial(self, data):
@@ -296,7 +296,7 @@ class FSM(ThreadingActor):
                 return self.specialized(msg)
 
             except Exception as failure:
-                logger.debug('%s : exception trapped while handling specialized messages (%s)' % (self.path, str(failure)))
+                logger.debug('%s : exception trapped while handling specialized messages (%s)', self.path, str(failure))
                 pass
 
         else:
@@ -364,7 +364,7 @@ class FSM(ThreadingActor):
                 #
                 if cmd['state'] == 'reset':
 
-                    logger.debug('%s : exception trapped while resetting (%s)' % (self.path, str(failure)))
+                    logger.debug('%s : exception trapped while resetting (%s)', self.path, str(failure))
                     _kill(self.actor_ref)
                     self.dying = 1
 
@@ -374,7 +374,7 @@ class FSM(ThreadingActor):
                     data.cause = failure
                     data.previous = cmd['state']
                     data.diagnostic = diagnostic(failure)
-                    logger.debug('%s : exception trapped -> (%s)' % (self.path, data.diagnostic))
+                    logger.debug('%s : exception trapped -> (%s)', self.path, data.diagnostic)
                     self.actor_ref.tell({'fsm': {'state': 'reset', 'data': data}})
 
 

@@ -82,7 +82,7 @@ class Pod(EC2Kubernetes):
             # - grab our environment variables
             # - isolate the ones prefixed with ochopod_
             #
-            logger.debug('environment ->\n%s' % '\n'.join(['\t%s -> %s' % (k, v) for k, v in env.items()]))
+            logger.debug('environment ->\n%s', '\n'.join(['\t%s -> %s' % (k, v) for k, v in env.items()]))
             hints = {k[8:]: v for k, v in env.items() if k.startswith('ochopod_')}
             if local or hints['local'] == 'true':
 
@@ -193,7 +193,7 @@ class Pod(EC2Kubernetes):
             #   the coordinator (especially the pod index which is derived from zookeeper)
             #
             latch = ThreadingFuture()
-            logger.info('starting %s.%s (kubernetes/ec2) @ %s' % (hints['namespace'], hints['cluster'], hints['node']))
+            logger.info('starting %s.%s (kubernetes/ec2) @ %s', hints['namespace'], hints['cluster'], hints['node'])
             breadcrumbs = deepcopy(hints)
             env.update({'ochopod': json.dumps(hints)})
             executor = lifecycle.start(env, latch, hints)
@@ -264,12 +264,12 @@ class Pod(EC2Kubernetes):
                 try:
 
                     ts = time.time()
-                    logger.debug('http in -> /control/%s' % task)
+                    logger.debug('http in -> /control/%s', task)
                     latch = ThreadingFuture()
                     executor.tell({'request': task, 'latch': latch, 'data': request.data})
                     js, code = latch.get(timeout=int(timeout))
                     ms = time.time() - ts
-                    logger.debug('http out -> HTTP %s (%d ms)' % (code, ms))
+                    logger.debug('http out -> HTTP %s (%d ms)', code, ms)
                     return json.dumps(js), code
 
                 except Timeout:
@@ -341,6 +341,6 @@ class Pod(EC2Kubernetes):
 
         except Exception as failure:
 
-            logger.fatal('unexpected condition -> %s' % diagnostic(failure))
+            logger.fatal('unexpected condition -> %s', diagnostic(failure))
 
         exit(1)

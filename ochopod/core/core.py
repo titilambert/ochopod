@@ -84,14 +84,14 @@ class ZK(FSM):
         self.connected = 0
         self.force_reset = 0
         self.hints['state'] = 'follower'
-        logger.warning('%s : actor reset (%s)' % (self.path, data.cause))
+        logger.warning('%s : actor reset (%s)', self.path, data.cause)
         if hasattr(data, 'zk'):
 
             #
             # - gracefully shut our client down
             #
             data.zk.stop()
-            logger.debug('%s : zk client stopped, releasing resources' % self.path)
+            logger.debug('%s : zk client stopped, releasing resources', self.path)
             data.zk.close()
 
         if self.terminate:
@@ -105,7 +105,7 @@ class ZK(FSM):
         # - setup a new kazoo client
         #
         cnx_string = ','.join(self.brokers)
-        logger.debug('%s : connecting @ %s' % (self.path, cnx_string))
+        logger.debug('%s : connecting @ %s', self.path, cnx_string)
         data.zk = KazooClient(hosts=cnx_string, timeout=5.0, read_only=0, randomize_hosts=1)
         data.zk.add_listener(self.feedback)
         data.zk.start()
@@ -155,10 +155,10 @@ class ZK(FSM):
             #   and /snapshot has not been phased out yet .. this is not an issue, simply pause a bit
             #   to re-attempt later
             #
-            logger.debug('%s : pod %s is already there (probably a zk reconnect)' % (self.path, self.id))
+            logger.debug('%s : pod %s is already there (probably a zk reconnect)', self.path, self.id)
             return 'wait_for_cnx', data, 5.0 * SAMPLING
 
-        logger.debug('%s : registered as %s (#%d)' % (self.path, self.id, self.seq))
+        logger.debug('%s : registered as %s (#%d)', self.path, self.id, self.seq)
         data.connected_at = time.time()
         return 'spin', data, 0
 
@@ -179,9 +179,9 @@ class ZK(FSM):
             #
             state = msg['state']
             current = 'connected' if self.connected else 'disconnected'
-            logger.debug('%s : zk state change -> "%s" (%s)' % (self.path, str(state), current))
+            logger.debug('%s : zk state change -> "%s" (%s)', self.path, str(state), current)
             if self.connected and state != KazooState.CONNECTED:
-                logger.warning('%s : lost connection (%s) / forcing a reset' % (self.path, str(state)))
+                logger.warning('%s : lost connection (%s) / forcing a reset', self.path, str(state))
                 self.force_reset = 1
                 self.connected = 0
 
@@ -278,7 +278,7 @@ class Coordinator(ZK):
         # - start the controller actor
         #
         data.latch = ThreadingFuture()
-        logger.debug('%s : lock acquired @ %s, now leading' % (self.path, self.prefix))
+        logger.debug('%s : lock acquired @ %s, now leading', self.path, self.prefix)
         data.controller = self.model.start(data.zk, self.id, self.hints, self.scope, self.tag, self.port, data.latch)
 
         return 'lock', data, 0
