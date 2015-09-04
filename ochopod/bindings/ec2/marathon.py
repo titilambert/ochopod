@@ -31,7 +31,7 @@ from ochopod.models.reactive import Actor as Reactive
 from pykka import ThreadingFuture
 from pykka.exceptions import Timeout, ActorDeadError
 from flask import Flask, request
-from requests import post
+import requests
 
 #: Our ochopod logger.
 logger = logging.getLogger('ochopod')
@@ -119,9 +119,9 @@ class Pod(EC2Marathon):
                 # - get our underlying metadata using curl
                 #
                 def _peek(token, strict=True):
-                    code, lines = shell('curl -f http://169.254.169.254/latest/meta-data/%s' % token)
-                    assert not strict or code is 0, 'unable to lookup EC2 metadata for %s (are you running on EC2 ?)' % token
-                    return lines[0]
+                    result = requests.get('http://169.254.169.254/latest/meta-data/%s' % token)
+                    assert not strict or result.status_code is requests.codes.ok, 'unable to lookup EC2 metadata for %s (are you running on EC2 ?)' % token
+                    return result.text[0]
 
                 #
                 # - get our local and public IPV4 addresses
@@ -335,7 +335,7 @@ class Pod(EC2Marathon):
                 #
                 shutdown(executor)
                 shutdown(coordinator)
-                post('http://127.0.0.1:%s/terminate' % env['ochopod_port'])
+                requests.post('http://127.0.0.1:%s/terminate' % env['ochopod_port'])
 
         except KeyboardInterrupt:
 

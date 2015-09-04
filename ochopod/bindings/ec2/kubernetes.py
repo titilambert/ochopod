@@ -31,7 +31,7 @@ from ochopod.models.reactive import Actor as Reactive
 from pykka import ThreadingFuture
 from pykka.exceptions import Timeout, ActorDeadError
 from flask import Flask, request
-from requests import post
+import requests
 from requests.auth import HTTPBasicAuth
 
 #: Our ochopod logger.
@@ -106,9 +106,9 @@ class Pod(EC2Kubernetes):
                 # - we'll retrieve the underlying metadata using curl
                 #
                 def _aws(token):
-                    code, lines = shell('curl -f http://169.254.169.254/latest/meta-data/%s' % token)
-                    assert code is 0, 'unable to lookup EC2 metadata for %s (are you running on EC2 ?)' % token
-                    return lines[0]
+                    result = requests.get('http://169.254.169.254/latest/meta-data/%s' % token)
+                    assert result.status_code is requests.codes.ok, 'unable to lookup EC2 metadata for %s (are you running on EC2 ?)' % token
+                    return result.text[0]
 
                 #
                 # - lame workaround to fetch the master IP and credentials as there does not seem to be a way to
@@ -117,9 +117,10 @@ class Pod(EC2Kubernetes):
                 # - don't forget to merge the resulting output
                 #
                 def _k8s(token):
-                    code, lines = shell('curl -f -u %s:%s -k https://%s/api/v1beta3/namespaces/default/%s' % (env['KUBERNETES_USER'], env['KUBERNETES_PWD'], env['KUBERNETES_MASTER'], token))
-                    assert code is 0, 'unable to look the RO service up (is the master running ?)'
-                    return json.loads(''.join(lines))
+                    result = requests.get('https://%s//api/v1beta3/namespaces/default/%s' % (env['KUBERNETES_MASTER'], token),
+                                          auth=(env['KUBERNETES_USER'], env['KUBERNETES_PWD']))
+                    assert result.status_code is requests.codes.ok, 'unable to look the RO service up (is the master running ?)'
+                    return result.json()
 
                 #
                 # - look our local k8s pod up
@@ -333,7 +334,7 @@ class Pod(EC2Kubernetes):
                 #
                 shutdown(executor)
                 shutdown(coordinator)
-                post('http://127.0.0.1:%s/terminate' % env['ochopod_port'])
+                requests.post('http://127.0.0.1:%s/terminate' % env['ochopod_port'])
 
         except KeyboardInterrupt:
 

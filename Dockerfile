@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND noninteractive
 # - remove defunct packages
 # - start supervisor
 #
-RUN apt-get -y update && apt-get -y upgrade && apt-get -y install git curl python python-requests supervisor
+RUN apt-get -y update && apt-get -y upgrade && apt-get -y install git python python-requests supervisor
 RUN curl https://bootstrap.pypa.io/get-pip.py | python
 ADD resources/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 RUN pip install git+https://github.com/autodesk-cloud/ochopod.git
